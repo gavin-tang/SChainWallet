@@ -8,6 +8,7 @@
 import CryptoSwift
 import Foundation
 import HandyJSON
+import web3swift
 
 enum WalletType: String, Codable {
     case mnemonic
@@ -16,21 +17,11 @@ enum WalletType: String, Codable {
     var method: String {
         return self.rawValue
     }
-
-//    var message: String {
-//        switch self {
-//        case .mnemonic:
-//            return R.string.localizable.creating()
-//        case .mnemonicImport, .privateImport:
-//            return R.string.localizable.importing()
-//        }
-//    }
 }
 
-private let walletStorageName = "WalletStorageKey.data"
 public struct Wallet: Codable, HandyJSON {
+    static let walletStorageName = "WalletStorageKey.data"
     public init() {}
-
     /// 创建方式
     var method: WalletType = .mnemonic
     /// 是否为当前钱包---后续如需要实现多钱包即可筛选
@@ -45,116 +36,85 @@ public struct Wallet: Codable, HandyJSON {
     var createTime: TimeInterval?
 }
 
-// import
-public extension Wallet {
-    /// 获取当前钱包
-    static var current: Wallet? {
-        if let wallets = Storage.shared.unarchive(appendPath: walletStorageName, Wallet.self) {
-            return wallets.filter { $0.isCurrent }.first
+extension Wallet {
+    /// 根据助记词生成钱包
+    /// - Parameters:
+    ///   - mnemonics: 助记词
+    ///   - password: 加密密码
+    /// - Returns: 钱包
+    static func mnemonicsToWallet(mnemonics: String, password: String) -> Wallet? {
+        do {
+            let aes = try AES(key: password.sc_password, iv: "Wallet".sc_iv)
+            let cryptResult = try aes.encrypt(Array(mnemonics.utf8))
+
+            if let seed = BIP39.seedFromMmemonics(mnemonics), let node = HDNode(seed: seed), let privateData = node.privateKey, let publicData = Web3Utils.privateToPublic(privateData), let address = Web3Utils.publicToAddress(publicData) {
+                let ret = Data(bytes: cryptResult).toHexString()
+                let dic: JSONObject = [
+                    "cryptoData": ret,
+                    "address": address.address.lowercased(),
+                    "createTime": Date().timeIntervalSince1970
+                ]
+                if var wallet = JSONDeserializer<Wallet>.deserializeFrom(dict: dic) {
+                    wallet.isCurrent = true
+                    wallet.method = .mnemonic
+                    return wallet
+                }
+                return nil
+            }
         }
+        catch {}
         return nil
     }
 
-    /// 钱包是否已存在
-    static func isAlreadyExist(_ address: String) -> Bool {
-        if let datas = Storage.shared.unarchive(appendPath: walletStorageName, Wallet.self), datas.count > 0 {
-            for walletModel in datas {
-                if walletModel.address == address {
-                    return true
-                }
-            }
-        }
-        return false
-    }
+    /// 根据私钥生成钱包
+    /// - Parameters:
+    ///   - privateKey: 私钥
+    ///   - password: 加密密码
+    /// - Returns: 钱包
+    static func privateKeyToWallet(privateKey: String, password: String) -> Wallet? {
+        do {
+            let aes = try AES(key: password.sc_password, iv: "Wallet".sc_iv)
+            let cryptResult = try aes.encrypt(Array(privateKey.utf8))
 
-    /// 添加钱包,新增的钱包永远都是当前钱包
-    func save() -> Bool {
-        if var datas = Storage.shared.unarchive(appendPath: walletStorageName, Wallet.self), datas.count > 0 {
-            for var walletModel in datas {
-                if walletModel.isCurrent == true {
-                    walletModel.isCurrent = false
-                    break
-                }
-            }
-            datas.append(self)
-            return Storage.shared.archive(array: datas, appendPath: walletStorageName)
-        } else { // 意味着还没有钱包
-            return Storage.shared.archive(array: [self], appendPath: walletStorageName)
-        }
-    }
+            let privateData = privateKey.sc_dropHex.sc_hex2data
 
-    /// 切换钱包
-    func switchover() -> Bool {
-        if let datas = Storage.shared.unarchive(appendPath: walletStorageName, Wallet.self) {
-            for var walletModel in datas {
-                if walletModel.isCurrent == true {
-                    walletModel.isCurrent = false
-                    continue
-                }
-                if walletModel.address == self.address { // 通过id能判断是否为同一个
-                    walletModel.isCurrent = true
-                }
+            guard let publicData = Web3Utils.privateToPublic(privateData) else {
+                return nil
             }
-            return Storage.shared.archive(array: datas, appendPath: walletStorageName)
-        }
-        return false
-    }
 
-    /// 删除钱包
-    func remove() -> Bool {
-        if var datas = Storage.shared.unarchive(appendPath: walletStorageName, Wallet.self) {
-            for (index, walletModel) in datas.enumerated() {
-                if walletModel.address == self.address {
-                    datas.remove(at: index)
-                    if walletModel.isCurrent, datas.count > 0 { // 如果是当前钱包，则需要多处理一步,将剩下的钱包中的第一个设置为当前钱包
-                        var current = datas.first!
-                        current.isCurrent = true
-                    }
-                    return Storage.shared.archive(array: datas, appendPath: walletStorageName)
+            if let address = Web3Utils.publicToAddress(publicData) {
+                let ret = Data(bytes: cryptResult).toHexString()
+                let dic: JSONObject = [
+                    "cryptoData": ret,
+                    "address": address.address.lowercased(),
+                    "createTime": Date().timeIntervalSince1970
+                ]
+                if var wallet = JSONDeserializer<Wallet>.deserializeFrom(dict: dic) {
+                    wallet.isCurrent = true
+                    wallet.method = .private
+                    return wallet
                 }
+                return nil
             }
         }
-        return false
-    }
-
-    func modify() -> Bool {
-        if var datas = Storage.shared.unarchive(appendPath: walletStorageName, Wallet.self) {
-            for (index, walletModel) in datas.enumerated() {
-                if walletModel.address == self.address {
-                    datas[index] = self
-                    return Storage.shared.archive(array: datas, appendPath: walletStorageName)
-                }
-            }
-        }
-        return false
-    }
-}
-
-// export
-public extension Wallet {
-    // 校验密码
-    func isValidPassword(password: String) throws -> Bool {
-        if let data = cryptoData {
-            let aes = try AES(key: password.sc_password, iv: self.iv.sc_iv)
-            let result = try aes.decrypt(Data(hex: data).bytes)
-            if result.count > 0 {
-                return true
-            }
-        }
-        return false
-    }
-
-    func exportWallet(password: String) throws -> String? {
-        guard try self.isValidPassword(password: password) else {
-            throw NSError(domain: "Password Incorrect!", code: -1)
-        }
-        if let data = cryptoData {
-            let aes = try AES(key: password.sc_password, iv: self.iv.sc_iv)
-            let result = try aes.decrypt(Data(hex: data.sc_dropHex).bytes)
-            if result.count > 0 {
-                return String(decoding: result, as: UTF8.self)
-            }
-        }
+        catch {}
         return nil
+    }
+
+    /// 助记词转私钥
+    /// - Parameter rawMnemonics: 助记词(未加密)
+    /// - Returns: 若是合理的助记词则返回私钥，否则 nil
+    static func mnemonicsToPrivateKey(rawMnemonics: String) -> String? {
+        guard let seed = BIP39.seedFromMmemonics(rawMnemonics) else {
+            return nil
+        }
+        guard let node = HDNode(seed: seed) else {
+            return nil
+        }
+
+        guard let privateData = node.privateKey else {
+            return nil
+        }
+        return privateData.toHexString()
     }
 }
