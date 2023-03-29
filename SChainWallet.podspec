@@ -39,4 +39,8 @@ TODO: Add long description of the pod here.
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
+  s.dependency 'CoreBitcoin', '0.6.8.1'
+  s.dependency 'web3swift', '2.6.4'
+  s.dependency 'Alamofire', '5.6.1'
+  s.dependency 'HandyJSON'
 end
