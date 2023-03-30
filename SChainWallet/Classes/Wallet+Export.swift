@@ -35,4 +35,15 @@ public extension Wallet {
         }
         return nil
     }
+
+    func exportPrivateWallet(password: String) -> String? {
+        do {
+            let raw = try exportWallet(password: password)
+            if self.method == .mnemonic, let raw = raw {
+                return Wallet.mnemonicsToPrivateKey(rawMnemonics: raw)
+            }
+            return raw
+        } catch {}
+        return nil
+    }
 }

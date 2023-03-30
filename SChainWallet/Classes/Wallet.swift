@@ -29,7 +29,7 @@ public struct Wallet: Codable, HandyJSON {
     /// 导入数据的加密私钥、助记词
     var cryptoData: String?
     /// 地址
-    var address: String?
+    var address: String = ""
     /// 作为存储私钥或助记词生成的随机data转换的16进制字符串
     var iv: String = "Wallet"
     /// 钱包创建时间

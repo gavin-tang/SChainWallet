@@ -44,4 +44,12 @@ extension String {
     var sc_hex2data: Data {
         return Data(hex: self)
     }
+
+    var sc_toJson: JSONObject? {
+        let d = self.data(using: .utf8)
+        if let ret = try? JSONSerialization.jsonObject(with: d ?? Data()) as? JSONObject {
+            return ret
+        }
+        return nil
+    }
 }
