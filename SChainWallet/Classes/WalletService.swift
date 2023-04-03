@@ -23,10 +23,16 @@ public struct WalletResponse<T> {
 
 public class WalletService {
     internal static let share = WalletService()
-    var rpcURL: URL = .init(string: "https://baidu.com")!
-    var chainID: Int = 22
-    var bigChainID: BigUInt = .init(22)
-    var networks: Networks?
+    internal var rpcURL: URL = .init(string: "http://121.46.19.38:54701")!
+    internal var chainID: Int = 123321 {
+        didSet {
+            bigChainID = BigUInt(chainID)
+            networks = Networks.Custom(networkID: BigUInt(chainID))
+        }
+    }
+
+    internal var bigChainID: BigUInt = .init(123321)
+    internal var networks: Networks? = Networks.Custom(networkID: BigUInt(123321))
 
     init() {}
 
@@ -48,11 +54,10 @@ extension WalletService {
 }
 
 public extension WalletService {
-    static func build(url: URL, chainID: Int) {
+    static func build(url: URL, chainID: Int) -> WalletService {
         WalletService.share.rpcURL = url
         WalletService.share.chainID = chainID
-        WalletService.share.bigChainID = BigUInt(chainID)
-        WalletService.share.networks = Networks.Custom(networkID: BigUInt(chainID))
+        return WalletService.share
     }
 }
 
@@ -82,5 +87,56 @@ public extension WalletService {
             err = error as? CyError
         }
         return WalletResponse<String?>(data: tx, error: err)
+    }
+
+    func shotdown() {}
+
+    func getNativeTokenBalance(address: String) -> BigUInt? {
+        do {
+            let w3 = WalletService.share.w3
+            let balance = try w3?.eth.getBalance(address: EthereumAddress(address)!)
+            return balance
+        } catch {}
+
+        return nil
+    }
+
+    func getTransactionCount(address: String) -> BigUInt? {
+        do {
+            let w3 = WalletService.share.w3
+            let balance = try w3?.eth.getTransactionCount(address: EthereumAddress(address)!)
+            return balance
+        } catch {}
+
+        return nil
+    }
+
+    func getDptBalance(contractAddress: String, walletAddress: String) -> [Any?]? {
+        var params: JSONObject = [:]
+
+//        params["Module"] = "Client"
+//        params["Action"] = "GetPersonalPointList"
+//        params["ContractAddress"] = contractAddress
+//        params["WalletAddress"] = walletAddress
+//        let request = AF.request(rpcURL, method: .post, parameters: params)
+
+        return nil
+    }
+
+    func getDptBatchBalance(contractAddress: String, walletAddress: String, batchNo: String) -> WalletResponse<[Any?]?>? {
+        return nil
+    }
+
+    func isCyWhiteList(address: String) -> WalletResponse<[Any?]?>? {
+        return nil
+    }
+
+    func isCyBlacklist(address: String) -> WalletResponse<[Any?]?>? {
+        return nil
+    }
+
+    func pointAggregationTransaction(walletPassword: String, walletAddress: String, toAddress: String, dptContractList: [Any]) -> WalletResponse<[Any?]?>?
+    {
+        return nil
     }
 }

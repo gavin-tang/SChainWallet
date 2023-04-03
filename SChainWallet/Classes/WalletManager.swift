@@ -26,4 +26,19 @@ public extension WalletManager {
     static func mnemonicsToPrivateKey(rawMnemonics: String) -> String? {
         return Wallet.mnemonicsToPrivateKey(rawMnemonics: rawMnemonics)
     }
+
+    /// 销毁钱包文件
+    static func destroyWallet(address: String) -> Bool {
+        return Wallet.removeWalletWithAddress(address: address)
+    }
+
+    /// 导出钱包私钥
+    static func getWalletPrivateKey(address: String, password: String) -> String? {
+        return Wallet.privateKeyWithAddress(address: address, password: password)
+    }
+
+    /// 生成交易签名
+    static func signMsg(message: String, password: String) -> String? {
+        return nil
+    }
 }
