@@ -22,7 +22,7 @@ pod 'SChainWallet'
 
 ## Author
 
-3839147, 365524764@qq.com
+3839147, abc@qq.com
 
 ## License
 
