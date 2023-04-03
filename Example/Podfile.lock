@@ -1,13 +1,8 @@
 PODS:
   - Alamofire (5.6.1)
   - BigInt (5.2.0)
-  - CoreBitcoin (0.6.8.1):
-    - ISO8601DateFormatter
-    - OpenSSL-Universal (= 1.0.1.16)
   - CryptoSwift (1.4.3)
   - HandyJSON (5.0.2)
-  - ISO8601DateFormatter (0.8)
-  - OpenSSL-Universal (1.0.1.16)
   - PromiseKit (6.15.3):
     - PromiseKit/CorePromise (= 6.15.3)
     - PromiseKit/Foundation (= 6.15.3)
@@ -19,7 +14,6 @@ PODS:
     - PromiseKit/CorePromise
   - SChainWallet (0.1.0):
     - Alamofire (= 5.6.1)
-    - CoreBitcoin (= 0.6.8.1)
     - HandyJSON
     - web3swift (= 2.6.4)
   - secp256k1.c (0.1.2)
@@ -38,11 +32,8 @@ SPEC REPOS:
   trunk:
     - Alamofire
     - BigInt
-    - CoreBitcoin
     - CryptoSwift
     - HandyJSON
-    - ISO8601DateFormatter
-    - OpenSSL-Universal
     - PromiseKit
     - secp256k1.c
     - Starscream
@@ -55,17 +46,14 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Alamofire: 87bd8c952f9a4454320fce00d9cc3de57bcadaf5
   BigInt: f668a80089607f521586bbe29513d708491ef2f7
-  CoreBitcoin: 4ac6f6a61e543f08399c2fe57496d4fdcbaf74f9
   CryptoSwift: a0799ee936271bd2253a006f1e4523df21845000
   HandyJSON: 9e4e236f5d2dbefad5155a77417bbea438201c03
-  ISO8601DateFormatter: 4551b6ce4f83185425f583b0b3feb3c7b59b942c
-  OpenSSL-Universal: 85ef63bf81d0741b03c8719cd29685c37c59518d
   PromiseKit: 3b2b6995e51a954c46dbc550ce3da44fbfb563c5
-  SChainWallet: f39beac751338ba29cc98ec0bbffe600d926abd5
+  SChainWallet: 58a3de6ed3b8bbc266edb9e28351734ff64a040d
   secp256k1.c: db47b726585d80f027423682eb369729e61b3b20
   Starscream: 5178aed56b316f13fa3bc55694e583d35dd414d9
   web3swift: 54eb4f659a57e9cb746169c6dc1a8ae8bc10dd95
 
-PODFILE CHECKSUM: 74fda4ef6b52cb999788780b1863d01119f0acca
+PODFILE CHECKSUM: c6869858d4711d3aa77980c2ff614a22cd61e01b
 
 COCOAPODS: 1.11.3

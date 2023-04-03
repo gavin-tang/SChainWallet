@@ -28,19 +28,26 @@ TODO: Add long description of the pod here abc@qq.com.
   s.source           = { :git => 'https://github.com/gavin-tang/SChainWallet.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '10.0'
+  s.swift_versions = '5.5'
+  s.ios.deployment_target = "13.0"
+#  s.osx.deployment_target = "10.15"
 
   s.source_files = 'SChainWallet/Classes/**/*'
   
   # s.resource_bundles = {
   #   'SChainWallet' => ['SChainWallet/Assets/*.png']
   # }
+#  s.static_framework = true
+#  s.pod_target_xcconfig = {
+#      "OTHER_LDFLAGS" => "-lObjC",
+#      "SWIFT_OPTIMIZATION_LEVEL" => "-Owholemodule"
+#    }
+  s.pod_target_xcconfig = {
+      'VALID_ARCHS' => 'arm64 x86_64'
+  }
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
-  s.static_framework = true
-  s.dependency 'CoreBitcoin', '0.6.8.1'
   s.dependency 'web3swift', '2.6.4'
   s.dependency 'Alamofire', '5.6.1'
   s.dependency 'HandyJSON'
