@@ -52,4 +52,10 @@ extension String {
         }
         return nil
     }
+    var sc_hex210String: String? {
+        if let d = self.data(using: .utf8)?.toHexString() {
+            return UInt64(d, radix: 16)?.description
+        }
+        return nil
+    }
 }

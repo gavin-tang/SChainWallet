@@ -42,7 +42,32 @@ class ViewController: UIViewController {
 
     @IBAction func call(_ sender: Any) {}
     
-    @IBAction func sendTransaction(_ sender: Any) {}
+    @IBAction func sendTransaction(_ sender: Any) {
+        let privateKey = "d7234b49aaa8c62a883cb23657a52b4b30e65c062f0ea04b38d08b3592f80aab"
+        let password = "123456"
+        let from = "0x19B6e621a088749dedb3425A03A90Ec5b65e9D26"
+        let to = "0x203080E21D157C56BFA30aa01716D632F5247546"
+        let wallet = WalletManager.privateKeyToWallet(privateKey: privateKey, password: password)
+        wallet?.save()
+        
+        let balance = WalletService.getDptBalance(contractAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", walletAddress: from)
+        
+        let l = IntegralToken(tokenName: "C-DPT", tokenAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", points: 1)
+
+//        批次号是jstin00002
+//        let result =
+
+        let l1 = IntegralToken(tokenName: "P-DPT", tokenAddress: "0x166F1305cF4534b2c3b57DB9449C170F7eE6e29c", points: 1)
+
+        DispatchQueue.global().async {
+            
+            let result = WalletService.pointAggregationTransaction(walletPassword: password, walletAddress: from, toAddress: to, dptContractList: [l])
+            
+            print(result)
+        }
+        
+        
+    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
