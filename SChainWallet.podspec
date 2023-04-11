@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'SChainWallet'
-  s.version          = '0.1.0'
+  s.version          = '0.2.0'
   s.summary          = 'A short description of SChainWallet.'
 
 # This description is used to generate tags and improve search results.
@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
 #   * Finally, don't worry about the indent, CocoaPods strips it!
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here abc@qq.com.
+TODO: SChainWallet is long description of the pod here abc@qq.com.
                        DESC
 
   s.homepage         = 'https://github.com/gavin-tang/SChainWallet'
