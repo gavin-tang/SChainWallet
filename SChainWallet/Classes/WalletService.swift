@@ -95,7 +95,7 @@ extension WalletService {
         let query = """
         [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":false,"internalType":"bool","name":"isAdd","type":"bool"}],"name":"Blacklist","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"GovernorAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"GovernorRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"version","type":"uint8"}],"name":"Initialized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":false,"internalType":"bool","name":"isAdd","type":"bool"}],"name":"Whitelist","type":"event"},{"inputs":[{"internalType":"address[]","name":"accounts","type":"address[]"}],"name":"addAccount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_account","type":"address"}],"name":"addGovernor","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_owner","type":"address"}],"name":"init","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_account","type":"address"}],"name":"isGovernor","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"isLimited","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"isWhitelist","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"accounts","type":"address[]"}],"name":"removeAccount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_account","type":"address"}],"name":"removeGovernor","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceGovernor","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"accounts","type":"address[]"}],"name":"whitelistAdd","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"accounts","type":"address[]"}],"name":"whitelistRemove","outputs":[],"stateMutability":"nonpayable","type":"function"}]
         """
-        let contract = w3?.contract(query, at: EthereumAddress(WalletService.Transfer_Contract_Address)!, abiVersion: 2)
+        let contract = w3?.contract(query, at: EthereumAddress(WalletService.WhiteBlacklist_Contract_Address)!, abiVersion: 2)
         return contract
     }
 }
@@ -109,71 +109,43 @@ public extension WalletService {
 }
 
 public extension WalletService {
-    func call(from: String, to: String, data: String) -> WalletResponse<String?> {
-        let params = ["jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": [["from": from, "to": to, "data": data] as [String: Any], "latest"]] as [String: Any]
-        let request = AF.request(rpcURL, method: .post, parameters: params)
-        
-        let promise = Promise<String> { resolver in
-            request.responseString { response in
-                debugPrint(response.value)
-                if let value = response.value, let tx = value.sc_toJson?["data"] as? String {
-                    resolver.fulfill(tx)
-                } else if let error = response.error {
-                    resolver.reject(error)
-                } else {
-                    resolver.reject(CyError(errorCode: -1, errorMsg: "unkown error"))
-                }
-            }
-        }
-        
-        var tx: String?
-        var err: CyError?
-        do {
-            tx = try promise.wait()
-        } catch {
-            err = error as? CyError
-        }
-        return WalletResponse<String?>(data: tx, error: err)
+    static func call(from: String, to: String, data: String) -> WalletResponse<String?> {
+        return share.call(from: from, to: to, data: data)
     }
     
-    func shotdown() {}
+    static func shotdown() {}
     
-    func getNativeTokenBalance(address: String) -> WalletResponse<BigUInt?>? {
-        do {
-            let w3 = WalletService.share.w3
-            let balance = try w3?.eth.getBalance(address: EthereumAddress(address)!)
-            return WalletResponse(data: balance, error: nil)
-        } catch {}
-        
-        return nil
+    /// 获取原始代币余额
+    static func getNativeTokenBalance(address: String) -> WalletResponse<BigUInt?>? {
+        return share.getNativeTokenBalance(address: address)
     }
     
-    func getTransactionCount(address: String) -> WalletResponse<BigUInt?>? {
-        do {
-            let w3 = WalletService.share.w3
-            let nonce = try w3?.eth.getTransactionCount(address: EthereumAddress(address)!)
-            return WalletResponse(data: nonce, error: nil)
-        } catch {}
-        
-        return nil
+    /// 获取交易随机数
+    static func getTransactionCount(address: String) -> WalletResponse<BigUInt?>? {
+        return share.getTransactionCount(address: address)
     }
     
+    /// 查询积分余额
     static func getDptBalance(contractAddress: String, walletAddress: String) -> WalletResponse<BigUInt?>? {
         return share.getDptBalance(contractAddress: contractAddress, walletAddress: walletAddress)
     }
     
-    func getDptBatchBalance(contractAddress: String, walletAddress: String, batchNo: String) -> WalletResponse<[Any?]?>? {
-        return nil
+    /// 获取积分合约单个批次余额
+    static func getDptBatchBalance(contractAddress: String, walletAddress: String, batchNo: String) -> WalletResponse<BigUInt?>? {
+        return share.getDptBatchBalance(contractAddress: contractAddress, walletAddress: walletAddress, batchNo: batchNo)
     }
     
-    func isCyWhiteList(address: String) -> WalletResponse<[Any?]?>? {
-        return nil
+    /// 查询钱包地址是否在畅由体系内
+    static func isCyWhiteList(address: String) -> WalletResponse<Bool?>? {
+        return share.isCyWhiteList(address: address)
     }
     
-    func isCyBlacklist(address: String) -> WalletResponse<[Any?]?>? {
-        return nil
+    /// 查询钱包地址是否黑名单
+    static func isCyBlacklist(address: String) -> WalletResponse<Bool?>? {
+        return share.isCyBlacklist(address: address)
     }
-    
+
+    /// 多积分转账
     static func pointAggregationTransaction(walletPassword: String, walletAddress: String, toAddress: String, dptContractList: [IntegralToken]) -> WalletResponse<String?>? {
         return share.pointAggregationTransaction(walletPassword: walletPassword, walletAddress: walletAddress, toAddress: toAddress, dptContractList: dptContractList)
     }
@@ -184,12 +156,91 @@ extension WalletService {
         do {
             let w3 = WalletService.share.w3
             let gasPrice = try w3?.eth.getGasPricePromise().wait()
-            debugPrint("gasPrice", gasPrice)
+            debugPrint("gasPrice", gasPrice as Any)
             return gasPrice
         } catch {
-            print("gasPrice", error)
+            debugPrint("gasPrice", error)
         }
         return nil
+    }
+    
+    func getNativeTokenBalance(address: String) -> WalletResponse<BigUInt?>? {
+        do {
+            let w3 = WalletService.share.w3
+            let balance = try w3?.eth.getBalance(address: EthereumAddress(address)!)
+            return WalletResponse(data: balance, error: nil)
+        } catch {
+            debugPrint(error)
+            return WalletResponse(error: CyError(errorCode: -1, errorMsg: error.localizedDescription))
+        }
+    }
+    
+    func getTransactionCount(address: String) -> WalletResponse<BigUInt?>? {
+        do {
+            let w3 = WalletService.share.w3
+            let nonce = try w3?.eth.getTransactionCount(address: EthereumAddress(address)!)
+            return WalletResponse(data: nonce, error: nil)
+        } catch {
+            debugPrint(error)
+            return WalletResponse(error: CyError(errorCode: -1, errorMsg: error.localizedDescription))
+        }
+    }
+    
+    func getDptBatchBalance(contractAddress: String, walletAddress: String, batchNo: String) -> WalletResponse<BigUInt?>? {
+        guard let contract = w3?.contract(Web3Utils.erc1155ABI, at: EthereumAddress(contractAddress)!, abiVersion: 2) else {
+            return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get gasPrice fail"))
+        }
+        
+        do {
+            var transactionOptions = TransactionOptions.defaultOptions
+            transactionOptions.callOnBlock = .latest
+            let result = try contract.read("balanceOf", parameters: [EthereumAddress(walletAddress)!, batchNo.sc_hex210BigUInt!] as [AnyObject], extraData: Data(), transactionOptions: transactionOptions)!.call(transactionOptions: transactionOptions)
+            guard let res = result["0"] as? BigUInt else {
+                return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "unkown error"))
+            }
+            return WalletResponse(data: res)
+        } catch {
+            debugPrint(error)
+            return WalletResponse(error: CyError(errorCode: -1, errorMsg: error.localizedDescription))
+        }
+    }
+    
+    func isCyWhiteList(address: String) -> WalletResponse<Bool?>? {
+        guard let contract = WalletService.share.blackwhiteContract else {
+            return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get gasPrice fail"))
+        }
+        
+        do {
+            var transactionOptions = TransactionOptions.defaultOptions
+            transactionOptions.callOnBlock = .latest
+            let result = try contract.read("isWhitelist", parameters: [EthereumAddress(address)!] as [AnyObject], extraData: Data(), transactionOptions: transactionOptions)!.call(transactionOptions: transactionOptions)
+            if let res = result["0"] as? Bool {
+                return WalletResponse(data: res)
+            }
+        } catch {
+            debugPrint(error)
+            return WalletResponse(error: CyError(errorCode: -1, errorMsg: error.localizedDescription))
+        }
+        return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "unkown error"))
+    }
+    
+    func isCyBlacklist(address: String) -> WalletResponse<Bool?>? {
+        guard let contract = WalletService.share.blackwhiteContract else {
+            return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get gasPrice fail"))
+        }
+        
+        do {
+            var transactionOptions = TransactionOptions.defaultOptions
+            transactionOptions.callOnBlock = .latest
+            let result = try contract.read("isLimited", parameters: [EthereumAddress(address)!] as [AnyObject], extraData: Data(), transactionOptions: transactionOptions)!.call(transactionOptions: transactionOptions)
+            if let res = result["0"] as? Bool {
+                return WalletResponse(data: res)
+            }
+        } catch {
+            return WalletResponse(error: CyError(errorCode: -1, errorMsg: error.localizedDescription))
+        }
+        
+        return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "unkown error"))
     }
     
     /// 申请原生代币
@@ -197,7 +248,7 @@ extension WalletService {
         let request = AF.request("http://172.16.2.180:5111/ApplyTransfer", method: .post, parameters: ["WalletAddress": address])
         let promise = Promise<JSONObject> { resolver in
             request.responseString { response in
-                debugPrint(response.value)
+                debugPrint(response.value as Any)
                 if let value = response.value, let tx = value.sc_toJson?["data"] as? JSONObject {
                     resolver.fulfill(tx)
                 } else if let error = response.error {
@@ -233,15 +284,11 @@ extension WalletService {
             return WalletResponse(data: ret)
         } catch {
             debugPrint(error)
+            return WalletResponse(error: CyError(errorCode: -1, errorMsg: error.localizedDescription))
         }
-        
-        return nil
     }
     
     func pointAggregationTransaction(walletPassword: String, walletAddress: String, toAddress: String, dptContractList: [IntegralToken]) -> WalletResponse<String?>? {
-        let z18: Int64 = 1000000000000000000
-        let zzzzz = BigUInt(z18)
-        
         guard let privateData = Wallet.current?.exportPrivateWallet(password: walletPassword)?.sc_hex2data else {
             return WalletResponse(error: CyError(errorCode: -1, errorMsg: "error wallet"))
         }
@@ -250,6 +297,7 @@ extension WalletService {
             return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get balance fail"))
         }
 
+        let zzzzz = BigUInt(1000000000000000000)
         if balance! < zzzzz {
             let rst = applyTransfer(address: walletAddress)
             if rst == false {
@@ -261,12 +309,12 @@ extension WalletService {
             return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get transaction count fail"))
         }
         
-//        guard let gasPrice = getGasPrice() else {
-//            return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get gasPrice fail"))
-//        }
-        let gasPrice = BigUInt(4100000000)
-        guard let contract = WalletService.share.transferContract else {
+        guard let gasPrice = getGasPrice() else {
             return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get gasPrice fail"))
+        }
+        
+        guard let contract = WalletService.share.transferContract else {
+            return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "contract fail"))
         }
         
         let from = EthereumAddress(walletAddress)!
@@ -282,17 +330,16 @@ extension WalletService {
         opt.from = from
         opt.to = to
         let data = Data()
-        /// 处理批次数据
         var ids: [BigUInt] = []
         var values: [BigUInt] = []
         var addresses: [EthereumAddress] = []
         for item in batches {
             if item.points == 0 { continue }
-            ids.append(BigUInt(item.tokenName.sc_hex210String!)!)
+            ids.append(item.tokenName.sc_hex210BigUInt!)
             values.append(BigUInt(item.points))
             addresses.append(EthereumAddress(item.tokenAddress)!)
         }
-        guard let contractTx = contract.write("proxyTransfer", parameters: [from, to, addresses,ids, values,] as [AnyObject], extraData: data, transactionOptions: opt) else {
+        guard let contractTx = contract.write("proxyTransfer", parameters: [from, to, addresses, ids, values] as [AnyObject], extraData: data, transactionOptions: opt) else {
             return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "Transaction generation failed"))
         }
         
@@ -303,18 +350,45 @@ extension WalletService {
         var transaction = EthereumTransaction(type: .legacy, to: EthereumAddress(WalletService.Transfer_Contract_Address)!, nonce: nonce!, chainID: bigChainID, value: BigUInt(0), data: contractTx.transaction.data, v: BigUInt(0), r: BigUInt(0), s: BigUInt(0), parameters: EthereumParameters(from: opt))
         
         do {
-//            let gas = try w3?.eth.estimateGas(transaction, transactionOptions: opt)
-            opt.gasLimit = .manual(gasPrice)
             transaction.applyOptions(opt)
-            transaction.unsign()
             transaction.chainID = bigChainID
+            transaction.unsign()
             try? transaction.sign(privateKey: privateData)
             
-            let result = try w3?.eth.sendRawTransaction(transaction)
-            debugPrint(result)
+            if let result = try w3?.eth.sendRawTransaction(transaction) {
+                return WalletResponse(data: result.hash)
+            }
         } catch {
             debugPrint(error)
+            return WalletResponse(error: CyError(errorCode: -1, errorMsg: error.localizedDescription))
         }
         return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "unkown error"))
+    }
+    
+    func call(from: String, to: String, data: String) -> WalletResponse<String?> {
+        let params = ["jsonrpc": "2.0", "method": "eth_call", "id": 1, "params": [["from": from, "to": to, "data": data] as [String: Any], "latest"]] as [String: Any]
+        let request = AF.request(rpcURL, method: .post, parameters: params)
+        
+        let promise = Promise<String> { resolver in
+            request.responseString { response in
+                debugPrint(response.value as Any)
+                if let value = response.value, let tx = value.sc_toJson?["data"] as? String {
+                    resolver.fulfill(tx)
+                } else if let error = response.error {
+                    resolver.reject(error)
+                } else {
+                    resolver.reject(CyError(errorCode: -1, errorMsg: "unkown error"))
+                }
+            }
+        }
+        
+        var tx: String?
+        var err: CyError?
+        do {
+            tx = try promise.wait()
+        } catch {
+            err = error as? CyError
+        }
+        return WalletResponse<String?>(data: tx, error: err)
     }
 }

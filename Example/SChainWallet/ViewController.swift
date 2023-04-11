@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        
+        return
         let password = "123456"
         let mnemonics = "situate injury abstract vendor install spend venture color pledge cradle liar toast"
         let privateKey = "6c6b69d230f643a880fbe6825aff39efd00a88cc7cd3609343f2d9ff6c5f6454"
@@ -50,9 +50,19 @@ class ViewController: UIViewController {
         let wallet = WalletManager.privateKeyToWallet(privateKey: privateKey, password: password)
         wallet?.save()
         
-        let balance = WalletService.getDptBalance(contractAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", walletAddress: from)
+        let getDptBatchBalance = WalletService.getDptBatchBalance(contractAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", walletAddress: from, batchNo: "THC2023032809")
+        debugPrint(getDptBatchBalance)
         
-        let l = IntegralToken(tokenName: "C-DPT", tokenAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", points: 1)
+        let isCyWhiteList = WalletService.isCyWhiteList(address: from)
+        debugPrint(isCyWhiteList)
+        
+        let isCyBlacklist = WalletService.isCyBlacklist(address: from)
+        debugPrint(isCyBlacklist)
+        
+        
+        let balance = WalletService.getDptBalance(contractAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", walletAddress: from)
+        debugPrint(balance)
+        let l = IntegralToken(tokenName: "THC2023032809", tokenAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", points: 1)
 
 //        批次号是jstin00002
 //        let result =
