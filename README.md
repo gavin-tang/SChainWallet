@@ -27,3 +27,14 @@ pod 'SChainWallet'
 ## License
 
 SChainWallet is available under the MIT license. See the LICENSE file for more info.
+
+
+## 更新步骤
+> 改 podspec文件为最新版本号
+
+```ruby
+1. git tag -m "update release" 0.2.0
+2. git push --tags
+3. pod spec lint SChainWallet.podspec  --allow-warnings --verbose  --skip-tests --skip-import-validation
+4. pod repo push SChainWallet SChainWallet.podspec --allow-warnings --verbose  --skip-tests
+```
