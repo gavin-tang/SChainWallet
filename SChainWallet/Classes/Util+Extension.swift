@@ -5,6 +5,7 @@
 //  Created by lt on 2023/3/29.
 //
 
+import BigInt
 import Foundation
 
 public typealias JSONObject = [String: Any]
@@ -49,6 +50,13 @@ extension String {
         let d = self.data(using: .utf8)
         if let ret = try? JSONSerialization.jsonObject(with: d ?? Data()) as? JSONObject {
             return ret
+        }
+        return nil
+    }
+
+    var sc_hex210BigUInt: BigUInt? {
+        if let d = self.data(using: .utf8)?.toHexString() {
+            return BigUInt(d, radix: 16)
         }
         return nil
     }
