@@ -50,6 +50,9 @@ class ViewController: UIViewController {
         let wallet = WalletManager.privateKeyToWallet(privateKey: privateKey, password: password)
         wallet?.save()
         
+        let ret = wallet?.personalSign(message: "This is a test data", password: password)
+        debugPrint(ret)
+        
         let getDptBatchBalance = WalletService.getDptBatchBalance(contractAddress: "0x13cbf419621a8A02f39228523D3CEeF203A15421", walletAddress: from, batchNo: "THC2023032809")
         debugPrint(getDptBatchBalance)
         
