@@ -12,13 +12,13 @@ import PromiseKit
 import web3swift
 
 public struct CyError: Error {
-    var errorCode: Int?
-    var errorMsg: String?
+    public  var errorCode: Int?
+    public  var errorMsg: String?
 }
 
 public struct WalletResponse<T> {
-    var data: T?
-    var error: CyError?
+    public var data: T?
+    public var error: CyError?
 }
 
 public struct IntegralToken {

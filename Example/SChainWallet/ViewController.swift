@@ -50,6 +50,11 @@ class ViewController: UIViewController {
         let wallet = WalletManager.privateKeyToWallet(privateKey: privateKey, password: password)
         wallet?.save()
         
+        if let rsp = WalletService.getTransactionCount(address: from), let data = rsp.data,  let nonce = data?.description {
+            let tx = wallet?.signTransaction(recipient: to, value: "1", nonce: nonce, gasLimit: "9000000", gasPrice: "4100000000", payload: "", password: password)
+            debugPrint(tx)
+        }
+        
         let ret = wallet?.personalSign(message: "This is a test data", password: password)
         debugPrint(ret)
         

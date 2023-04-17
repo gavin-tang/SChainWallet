@@ -28,6 +28,21 @@ public extension Wallet {
     }
 
     func signTransaction(recipient: String, value: String, nonce: String, gasLimit: String, gasPrice: String, payload: String, password: String) -> WalletResponse<String?> {
+        
+        // 增加余额不足的判断和转账
+        let service = WalletService.share
+        guard let balance = service.getNativeTokenBalance(address: address)?.data else {
+            return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get balance fail"))
+        }
+
+        let zzzzz = BigUInt(1000000000000000000)
+        if balance! < zzzzz {
+            let rst = service.applyTransfer(address: address)
+            if rst == false {
+                return WalletResponse(data: nil, error: CyError(errorCode: -1, errorMsg: "get balance fail"))
+            }
+        }
+        
         let _nonce = BigUInt(stringLiteral: nonce)
         var ops = TransactionOptions.defaultOptions
         ops.nonce = .manual(_nonce)
@@ -35,10 +50,12 @@ public extension Wallet {
         ops.to = EthereumAddress(recipient)
         ops.from = EthereumAddress(self.address)
         ops.gasPrice = .manual(BigUInt(stringLiteral: gasPrice))
-        ops.gasLimit = .automatic
+        ops.gasLimit = .manual(BigUInt(stringLiteral: gasLimit))
         ops.callOnBlock = .latest
+        
+        let _value = _nonce * zzzzz
 
-        var transaction = EthereumTransaction(type: .legacy, to: EthereumAddress(recipient)!, nonce: _nonce, chainID: WalletService.share.bigChainID, value: BigUInt(stringLiteral: value), data: payload.sc_hex2data, v: BigUInt(0), r: BigUInt(0), s: BigUInt(0), parameters: EthereumParameters(from: ops))
+        var transaction = EthereumTransaction(type: .legacy, to: EthereumAddress(recipient)!, nonce: _nonce, chainID: WalletService.share.bigChainID, value: _value, data: payload.sc_hex2data, v: BigUInt(0), r: BigUInt(0), s: BigUInt(0), parameters: EthereumParameters(from: ops))
         guard let privateKeyData = exportPrivateWallet(password: password)?.sc_hex2data else {
             return WalletResponse(error: CyError(errorCode: -1, errorMsg: "error wallet"))
         }
