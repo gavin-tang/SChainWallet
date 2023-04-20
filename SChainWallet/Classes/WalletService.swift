@@ -11,9 +11,70 @@ import Foundation
 import PromiseKit
 import web3swift
 
+public enum WalletServiceEnvironment {
+    case release
+    case test
+}
+
+public extension WalletServiceEnvironment {
+    var Transfer_Contract_Address: String {
+        switch self {
+        case .release:
+            return "0x55A24838F0a9c93aD30909B1Ac9C7f226858d7fD"
+        case .test:
+            return "0x9C5c0AC582802eed9f1857A53e0eda06EE0Dc482"
+        }
+    }
+    
+    var Sub_Token_Balance_Contract_Address: String {
+        switch self {
+        case .release:
+            return "0x4BE9b81158b2418EE6964FC1C477577A402020e2"
+        case .test:
+            return "0xFD2be2cEa326B6484D3C154F58384de65292C792"
+        }
+    }
+    
+    var WhiteBlacklist_Contract_Address: String {
+        switch self {
+        case .release:
+            return "0x6701069b74ed20aA631d9D53C6ff2b2198bCCE56"
+        case .test:
+            return "0x28D9b238847057eBD024FBECF6633689d897B819"
+        }
+    }
+
+    var chainId: BigUInt {
+        switch self {
+        case .release:
+            return BigUInt(12333)
+        case .test:
+            return BigUInt(123321)
+        }
+    }
+    
+    var rpcURL: String {
+        switch self {
+        case .release:
+            return "http://8.218.255.245:10002"
+        case .test:
+            return "http://121.46.19.38:54701"
+        }
+    }
+    
+    var apiURL: String {
+        switch self {
+        case .release:
+            return "http://8.218.255.245:10003"
+        case .test:
+            return "http://172.16.2.180:5111"
+        }
+    }
+}
+
 public struct CyError: Error {
-    public  var errorCode: Int?
-    public  var errorMsg: String?
+    public var errorCode: Int?
+    public var errorMsg: String?
 }
 
 public struct WalletResponse<T> {
@@ -34,11 +95,11 @@ public struct IntegralToken {
 
 public extension WalletService {
     /// 多积分转账合约
-    static let Transfer_Contract_Address = "0x9C5c0AC582802eed9f1857A53e0eda06EE0Dc482"
+    static let Transfer_Contract_Address = "0x4BE9b81158b2418EE6964FC1C477577A402020e2"
     /// 积分合约
-    static let Sub_Token_Balance_Contract_Address = "0xFD2be2cEa326B6484D3C154F58384de65292C792"
+    static let Sub_Token_Balance_Contract_Address = "0x55A24838F0a9c93aD30909B1Ac9C7f226858d7fD"
     /// 白名单、黑名单合约地址
-    static let WhiteBlacklist_Contract_Address = "0x28D9b238847057eBD024FBECF6633689d897B819"
+    static let WhiteBlacklist_Contract_Address = "0x6701069b74ed20aA631d9D53C6ff2b2198bCCE56"
     static let queryTokenABI = """
     [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"version","type":"uint8"}],"name":"Initialized","type":"event"},{"inputs":[{"internalType":"address[]","name":"tokens","type":"address[]"},{"internalType":"address[]","name":"accounts","type":"address[]"},{"internalType":"uint256[]","name":"ids","type":"uint256[]"}],"name":"balanceOfBatchAll","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_center","type":"address"}],"name":"init","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"accounts","type":"address[]"}],"name":"limitedBatch","outputs":[{"internalType":"bool[]","name":"","type":"bool[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"tokens","type":"address[]"},{"internalType":"address[]","name":"accounts","type":"address[]"}],"name":"overallBalanceBatchAll","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"accounts","type":"address[]"}],"name":"whitelistBatch","outputs":[{"internalType":"bool[]","name":"","type":"bool[]"}],"stateMutability":"view","type":"function"}]
     """
@@ -46,16 +107,16 @@ public extension WalletService {
 
 public class WalletService {
     internal static let share = WalletService()
-    internal var rpcURL: URL = .init(string: "http://121.46.19.38:54701")!
-    internal var chainID: Int = 123321 {
+    internal var rpcURL: URL = .init(string: "http://8.218.255.245:10002")!
+    internal var chainID: Int = 12333 {
         didSet {
             bigChainID = BigUInt(chainID)
             networks = Networks.Custom(networkID: BigUInt(chainID))
         }
     }
 
-    internal var bigChainID: BigUInt = .init(123321)
-    internal var networks: Networks? = Networks.Custom(networkID: BigUInt(123321))
+    internal var bigChainID: BigUInt = .init(12333)
+    internal var networks: Networks? = Networks.Custom(networkID: BigUInt(12333))
 
     init() {}
 
@@ -245,7 +306,7 @@ extension WalletService {
     
     /// 申请原生代币
     func applyTransfer(address: String) -> Bool {
-        let request = AF.request("http://172.16.2.180:5111/ApplyTransfer", method: .post, parameters: ["WalletAddress": address])
+        let request = AF.request("http://8.218.255.245:10003/ApplyTransfer", method: .post, parameters: ["WalletAddress": address])
         let promise = Promise<JSONObject> { resolver in
             request.responseString { response in
                 debugPrint(response.value as Any)
